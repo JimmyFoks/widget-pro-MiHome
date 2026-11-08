@@ -44,6 +44,11 @@ private class MemoryCookieJar : CookieJar {
     override fun loadForRequest(url: HttpUrl): List<Cookie> = store.filter { it.matches(url) }
 }
 
+fun newDeviceId(): String =
+    randomString(6, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+fun newAgentId(): String = randomString(13, "ABCDE")
+
 private fun randomString(n: Int, alphabet: String): String {
     val r = SecureRandom()
     val sb = StringBuilder()
@@ -56,11 +61,14 @@ private fun randomString(n: Int, alphabet: String): String {
  * Xiaomi-cloud-tokens-extractor / Home Assistant). Přihlášení jménem a heslem,
  * šifrované (RC4) podepsané volání API.
  */
-class MiCloud(private val region: String) {
+class MiCloud(
+    private val region: String,
+    private val deviceId: String = newDeviceId(),
+    agentId: String = newAgentId()
+) {
 
     private val agent = "Android-7.1.1-1.0.0-ONEPLUS A3010-136-" +
-            randomString(13, "ABCDE") + " APP/xiaomi.smarthome APPV/62830"
-    private val deviceId = randomString(6, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+            agentId + " APP/xiaomi.smarthome APPV/62830"
     private val jar = MemoryCookieJar()
 
     @Volatile

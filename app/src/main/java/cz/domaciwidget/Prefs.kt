@@ -7,6 +7,24 @@ import org.json.JSONObject
 object Prefs {
     private fun sp(ctx: Context) = ctx.getSharedPreferences("domaci_widget", Context.MODE_PRIVATE)
 
+    fun deviceId(ctx: Context): String {
+        val p = sp(ctx)
+        val cur = p.getString("device_id", null)
+        if (cur != null) return cur
+        val n = newDeviceId()
+        p.edit().putString("device_id", n).apply()
+        return n
+    }
+
+    fun agentId(ctx: Context): String {
+        val p = sp(ctx)
+        val cur = p.getString("agent_id", null)
+        if (cur != null) return cur
+        val n = newAgentId()
+        p.edit().putString("agent_id", n).apply()
+        return n
+    }
+
     fun region(ctx: Context): String = sp(ctx).getString("region", "de") ?: "de"
     fun user(ctx: Context): String = sp(ctx).getString("user", "") ?: ""
     fun passHash(ctx: Context): String = sp(ctx).getString("pass_hash", "") ?: ""

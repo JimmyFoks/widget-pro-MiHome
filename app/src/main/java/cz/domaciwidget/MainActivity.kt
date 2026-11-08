@@ -202,7 +202,7 @@ class MainActivity : Activity() {
         Thread {
             try {
                 val hash = md5Upper(pass)
-                val cloud = MiCloud(region)
+                val cloud = MiCloud(region, Prefs.deviceId(this), Prefs.agentId(this))
                 pendingCloud = cloud
                 pendingRegion = region
                 pendingUser = user
