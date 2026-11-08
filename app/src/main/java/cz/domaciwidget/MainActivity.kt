@@ -2,12 +2,14 @@ package cz.domaciwidget
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -21,7 +23,15 @@ class MainActivity : Activity() {
     private lateinit var status: TextView
     private lateinit var diag: TextView
     private lateinit var verifyBtn: Button
+    private lateinit var captchaImg: ImageView
+    private lateinit var captchaEt: EditText
+    private lateinit var captchaBtn: Button
     private var verifyUrl: String? = null
+
+    private var pendingCloud: MiCloud? = null
+    private var pendingRegion = "de"
+    private var pendingUser = ""
+    private var pendingHash = ""
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
@@ -47,7 +57,7 @@ class MainActivity : Activity() {
         root.addView(
             label(
                 "1) Přihlaste se stejným Xiaomi účtem, který používáte ve Vevs/MiHome.\n" +
-                        "2) Na plochu přidejte widget „Domácí widget“ (4×2) a vyberte senzor.", 14f
+                        "2) Na plochu přidejte widget „Domácí widget“ (4×2) a vyberte senzory.", 14f
             )
         )
 
@@ -75,6 +85,28 @@ class MainActivity : Activity() {
         loginBtn.setOnClickListener { doLogin() }
         root.addView(loginBtn)
 
+        status = label("", 14f)
+        root.addView(status)
+
+        captchaImg = ImageView(this)
+        captchaImg.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(90))
+        captchaImg.scaleType = ImageView.ScaleType.FIT_START
+        captchaImg.visibility = View.GONE
+        root.addView(captchaImg)
+
+        captchaEt = EditText(this)
+        captchaEt.hint = "Kód z obrázku"
+        captchaEt.inputType = InputType.TYPE_CLASS_TEXT
+        captchaEt.setSingleLine()
+        captchaEt.visibility = View.GONE
+        root.addView(captchaEt)
+
+        captchaBtn = Button(this)
+        captchaBtn.text = "Odeslat kód"
+        captchaBtn.visibility = View.GONE
+        captchaBtn.setOnClickListener { doCaptcha() }
+        root.addView(captchaBtn)
+
         verifyBtn = Button(this)
         verifyBtn.text = "Otevřít ověření Xiaomi"
         verifyBtn.visibility = View.GONE
@@ -83,9 +115,6 @@ class MainActivity : Activity() {
             if (u != null) startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(u)))
         }
         root.addView(verifyBtn)
-
-        status = label("", 14f)
-        root.addView(status)
 
         val refreshBtn = Button(this)
         refreshBtn.text = "Obnovit data teď"
@@ -119,6 +148,45 @@ class MainActivity : Activity() {
     private fun md5Upper(s: String): String =
         MessageDigest.getInstance("MD5").digest(s.toByteArray()).joinToString("") { "%02X".format(it) }
 
+    private fun hideCaptcha() {
+        captchaImg.visibility = View.GONE
+        captchaEt.visibility = View.GONE
+        captchaBtn.visibility = View.GONE
+    }
+
+    private fun showError(e: MiCloudException) {
+        status.text = e.message
+        verifyUrl = e.verifyUrl
+        verifyBtn.visibility = if (e.verifyUrl != null) View.VISIBLE else View.GONE
+        val img = e.captchaImage
+        if (img != null && img.isNotEmpty()) {
+            val bmp = BitmapFactory.decodeByteArray(img, 0, img.size)
+            if (bmp != null) {
+                captchaImg.setImageBitmap(bmp)
+                captchaImg.visibility = View.VISIBLE
+                captchaEt.setText("")
+                captchaEt.visibility = View.VISIBLE
+                captchaBtn.visibility = View.VISIBLE
+                return
+            }
+        }
+        hideCaptcha()
+    }
+
+    private fun completeLogin(region: String, user: String, hash: String, session: Session) {
+        Prefs.saveLogin(this, region, user, hash)
+        Prefs.saveSession(this, session)
+        val devices = MiCloud(region).listDevices(session)
+        Prefs.saveDevices(this, devices)
+        runOnUiThread {
+            hideCaptcha()
+            verifyBtn.visibility = View.GONE
+            passEt.setText("")
+            status.text = "Přihlášeno. Nalezeno zařízení: ${devices.size}.\n" +
+                    "Nyní přidejte widget 4×2 na plochu."
+        }
+    }
+
     private fun doLogin() {
         val region = regionEt.text.toString().trim().lowercase().ifEmpty { "de" }
         val user = userEt.text.toString().trim()
@@ -129,26 +197,41 @@ class MainActivity : Activity() {
         }
         status.text = "Přihlašuji…"
         verifyBtn.visibility = View.GONE
+        hideCaptcha()
 
         Thread {
             try {
                 val hash = md5Upper(pass)
-                val session = MiCloud(region).login(user, hash)
-                Prefs.saveLogin(this, region, user, hash)
-                Prefs.saveSession(this, session)
-                val devices = MiCloud(region).listDevices(session)
-                Prefs.saveDevices(this, devices)
-                runOnUiThread {
-                    passEt.setText("")
-                    status.text = "Přihlášeno. Nalezeno zařízení: ${devices.size}.\n" +
-                            "Nyní přidejte widget 4×2 na plochu."
-                }
+                val cloud = MiCloud(region)
+                pendingCloud = cloud
+                pendingRegion = region
+                pendingUser = user
+                pendingHash = hash
+                val session = cloud.login(user, hash)
+                completeLogin(region, user, hash, session)
             } catch (e: MiCloudException) {
-                runOnUiThread {
-                    status.text = e.message
-                    verifyUrl = e.verifyUrl
-                    verifyBtn.visibility = if (e.verifyUrl != null) View.VISIBLE else View.GONE
-                }
+                runOnUiThread { showError(e) }
+            } catch (e: Exception) {
+                runOnUiThread { status.text = "Chyba: " + (e.message ?: e.javaClass.simpleName) }
+            }
+        }.start()
+    }
+
+    private fun doCaptcha() {
+        val cloud = pendingCloud ?: return
+        val code = captchaEt.text.toString().trim()
+        if (code.isEmpty()) {
+            status.text = "Opište kód z obrázku."
+            return
+        }
+        status.text = "Ověřuji kód…"
+
+        Thread {
+            try {
+                val session = cloud.submitCaptcha(code)
+                completeLogin(pendingRegion, pendingUser, pendingHash, session)
+            } catch (e: MiCloudException) {
+                runOnUiThread { showError(e) }
             } catch (e: Exception) {
                 runOnUiThread { status.text = "Chyba: " + (e.message ?: e.javaClass.simpleName) }
             }

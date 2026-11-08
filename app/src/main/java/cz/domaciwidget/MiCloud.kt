@@ -19,7 +19,8 @@ import java.util.concurrent.TimeUnit
 class MiCloudException(
     message: String,
     val verifyUrl: String? = null,
-    val auth: Boolean = false
+    val auth: Boolean = false,
+    val captchaImage: ByteArray? = null
 ) : Exception(message)
 
 private class MemoryCookieJar : CookieJar {
@@ -100,6 +101,12 @@ class MiCloud(private val region: String) {
 
     // ------------------------------------------------------------------ přihlášení
 
+    private var pendingUser: String = ""
+    private var pendingHash: String = ""
+    private var pendingSign: String = ""
+    private var pendingCallback: String = ""
+    private var pendingQs: String = ""
+
     fun login(user: String, passMd5Upper: String): Session {
         for (domain in listOf("xiaomi.com", "mi.com")) {
             jar.add(cookie("sdkVersion", "accountsdk-18.8.15", domain))
@@ -115,23 +122,40 @@ class MiCloud(private val region: String) {
         val j1 = parseJson(http.newCall(req1).execute().use { it.body?.string().orEmpty() })
         val sign = j1.optString("_sign")
         if (sign.isEmpty()) throw MiCloudException("Přihlášení: server nevrátil podpis (_sign).")
-        val callback = j1.optString("callback").ifEmpty { "https://sts.api.io.mi.com/sts" }
-        val qs = j1.optString("qs").ifEmpty { "%3Fsid%3Dxiaomiio%26_json%3Dtrue" }
 
+        pendingUser = user
+        pendingHash = passMd5Upper
+        pendingSign = sign
+        pendingCallback = j1.optString("callback").ifEmpty { "https://sts.api.io.mi.com/sts" }
+        pendingQs = j1.optString("qs").ifEmpty { "%3Fsid%3Dxiaomiio%26_json%3Dtrue" }
+
+        return authenticate(null)
+    }
+
+    /** Dokončí přihlášení po opsání captchy (stejná relace jako login). */
+    fun submitCaptcha(code: String): Session = authenticate(code.trim())
+
+    private fun fetchCaptcha(url: String): ByteArray {
+        val full = if (url.startsWith("/")) "https://account.xiaomi.com$url" else url
+        val req = Request.Builder().url(full).header("User-Agent", agent).build()
+        return http.newCall(req).execute().use { it.body?.bytes() ?: ByteArray(0) }
+    }
+
+    private fun authenticate(captCode: String?): Session {
         // krok 2
-        val form = FormBody.Builder()
+        val fb = FormBody.Builder()
             .add("sid", "xiaomiio")
-            .add("hash", passMd5Upper)
-            .add("callback", callback)
-            .add("qs", qs)
-            .add("user", user)
-            .add("_sign", sign)
+            .add("hash", pendingHash)
+            .add("callback", pendingCallback)
+            .add("qs", pendingQs)
+            .add("user", pendingUser)
+            .add("_sign", pendingSign)
             .add("_json", "true")
-            .build()
+        if (!captCode.isNullOrEmpty()) fb.add("captCode", captCode)
         val req2 = Request.Builder()
             .url("https://account.xiaomi.com/pass/serviceLoginAuth2")
             .header("User-Agent", agent)
-            .post(form)
+            .post(fb.build())
             .build()
         val j2 = parseJson(http.newCall(req2).execute().use { it.body?.string().orEmpty() })
 
@@ -146,14 +170,24 @@ class MiCloud(private val region: String) {
                     verifyUrl = notif
                 )
             }
-            val desc = j2.optString("desc")
             val captcha = j2.optString("captchaUrl")
             if (captcha.isNotEmpty()) {
+                val img = try {
+                    fetchCaptcha(captcha)
+                } catch (e: Exception) {
+                    ByteArray(0)
+                }
+                if (img.isEmpty()) {
+                    throw MiCloudException("Xiaomi chce captchu, ale obrázek se nepodařilo stáhnout. Zkuste to znovu.")
+                }
+                val first = captCode.isNullOrEmpty()
                 throw MiCloudException(
-                    "Xiaomi chce opsat captchu. Přihlaste se na jejich webu v prohlížeči " +
-                            "a zkuste to za chvíli znovu."
+                    if (first) "Xiaomi chce ověřit, že nejste robot. Opište kód z obrázku."
+                    else "Kód nesedí nebo vypršel. Opište nový kód z obrázku.",
+                    captchaImage = img
                 )
             }
+            val desc = j2.optString("desc")
             throw MiCloudException("Přihlášení selhalo: $desc (kód ${j2.optInt("code")})")
         }
 
@@ -166,7 +200,7 @@ class MiCloud(private val region: String) {
         val token = capturedToken ?: jar.find("serviceToken")
             ?: throw MiCloudException("Přihlášení: nepodařilo se získat serviceToken.")
         var uid = j2.optString("userId")
-        if (uid.isEmpty()) uid = jar.find("userId") ?: user
+        if (uid.isEmpty()) uid = jar.find("userId") ?: pendingUser
         return Session(uid, ssecurity, token)
     }
 
