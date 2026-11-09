@@ -10,6 +10,7 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.net.URLEncoder
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Date
@@ -209,6 +210,48 @@ class MiCloud(
             ?: throw MiCloudException("Přihlášení: nepodařilo se získat serviceToken.")
         var uid = j2.optString("userId")
         if (uid.isEmpty()) uid = jar.find("userId") ?: pendingUser
+        return Session(uid, ssecurity, token)
+    }
+
+    /**
+     * Přihlášení pomocí passToken z webového přihlášení (WebView). Funguje bez hesla,
+     * captchu i ověření e-mailem řeší přímo Xiaomi na své přihlašovací stránce.
+     */
+    fun loginWithPassToken(userId: String, passToken: String, devId: String): Session {
+        for (domain in listOf("xiaomi.com", "mi.com")) {
+            jar.add(cookie("sdkVersion", "accountsdk-18.8.15", domain))
+            jar.add(cookie("deviceId", devId, domain))
+        }
+        jar.add(cookie("userId", userId, "xiaomi.com"))
+        jar.add(cookie("passToken", passToken, "xiaomi.com"))
+
+        val req = Request.Builder()
+            .url("https://account.xiaomi.com/pass/serviceLogin?sid=xiaomiio&_json=true")
+            .header("User-Agent", agent)
+            .build()
+        val j = parseJson(http.newCall(req).execute().use { it.body?.string().orEmpty() })
+        val ssecurity = j.optString("ssecurity")
+        val location = j.optString("location")
+        if (j.optInt("code", -1) != 0 || ssecurity.length <= 4 || location.isEmpty()) {
+            throw MiCloudException(
+                "Přihlášení přes token selhalo (kód ${j.optInt("code", -1)} ${j.optString("desc")}). " +
+                        "Přihlaste se znovu."
+            )
+        }
+        val nonce = j.optString("nonce")
+        val nsec = "nonce=$nonce&$ssecurity"
+        val clientSign = Base64.encodeToString(
+            MessageDigest.getInstance("SHA-1").digest(nsec.toByteArray()),
+            Base64.NO_WRAP
+        )
+        val url = location + "&clientSign=" + URLEncoder.encode(clientSign, "UTF-8")
+        val req2 = Request.Builder().url(url).header("User-Agent", agent).build()
+        http.newCall(req2).execute().use { it.body?.string() }
+
+        val token = capturedToken ?: jar.find("serviceToken")
+            ?: throw MiCloudException("Přihlášení: nepodařilo se získat serviceToken.")
+        var uid = j.optString("userId")
+        if (uid.isEmpty()) uid = userId
         return Session(uid, ssecurity, token)
     }
 

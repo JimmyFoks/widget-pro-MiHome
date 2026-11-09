@@ -28,7 +28,17 @@ object Prefs {
     fun region(ctx: Context): String = sp(ctx).getString("region", "de") ?: "de"
     fun user(ctx: Context): String = sp(ctx).getString("user", "") ?: ""
     fun passHash(ctx: Context): String = sp(ctx).getString("pass_hash", "") ?: ""
-    fun hasCredentials(ctx: Context): Boolean = user(ctx).isNotEmpty() && passHash(ctx).isNotEmpty()
+    fun passToken(ctx: Context): String = sp(ctx).getString("pass_token", "") ?: ""
+    fun hasCredentials(ctx: Context): Boolean = user(ctx).isNotEmpty() && passToken(ctx).isNotEmpty()
+
+    fun savePassLogin(ctx: Context, region: String, userId: String, passToken: String, deviceId: String) {
+        sp(ctx).edit()
+            .putString("region", region)
+            .putString("user", userId)
+            .putString("pass_token", passToken)
+            .putString("device_id", deviceId)
+            .apply()
+    }
 
     fun saveLogin(ctx: Context, region: String, user: String, passHash: String) {
         sp(ctx).edit()

@@ -9,7 +9,9 @@ class SensorService(private val ctx: Context) {
     private fun region(): String = Prefs.region(ctx)
 
     private fun login(): Session {
-        val s = MiCloud(region(), Prefs.deviceId(ctx), Prefs.agentId(ctx)).login(Prefs.user(ctx), Prefs.passHash(ctx))
+        val dev = Prefs.deviceId(ctx)
+        val s = MiCloud(region(), dev, Prefs.agentId(ctx))
+            .loginWithPassToken(Prefs.user(ctx), Prefs.passToken(ctx), dev)
         Prefs.saveSession(ctx, s)
         return s
     }
