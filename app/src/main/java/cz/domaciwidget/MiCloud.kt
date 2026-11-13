@@ -404,6 +404,42 @@ class MiCloud(
         return out
     }
 
+    /** did -> název místnosti, tak jak je v MiHome. */
+    fun roomsByDid(s: Session): Map<String, String> {
+        val data = JSONObject()
+            .put("fg", false)
+            .put("fetch_share", true)
+            .put("fetch_share_dev", true)
+            .put("limit", 300)
+            .put("app_ver", 7)
+        val res = call(s, "/v2/homeroom/gethome", data)
+        val homes = res.optJSONObject("result")?.optJSONArray("homelist") ?: return emptyMap()
+        val out = HashMap<String, String>()
+        for (i in 0 until homes.length()) {
+            val rooms = homes.getJSONObject(i).optJSONArray("roomlist") ?: continue
+            for (k in 0 until rooms.length()) {
+                val r = rooms.getJSONObject(k)
+                val name = r.optString("name")
+                val dids = r.optJSONArray("dids") ?: continue
+                for (d in 0 until dids.length()) out[dids.optString(d)] = name
+            }
+        }
+        return out
+    }
+
+    fun listDevicesWithRooms(s: Session): List<Device> {
+        val devs = listDevices(s)
+        val rooms: Map<String, String> = try {
+            roomsByDid(s)
+        } catch (e: Exception) {
+            emptyMap()
+        }
+        return devs.map { d ->
+            val r = rooms[d.did]
+            if (r != null) d.copy(room = r) else d
+        }
+    }
+
     /** Z miot-spec stáhne čísla vlastností (siid/piid) pro teplotu, vlhkost a baterii. */
     fun fetchSpecProps(specType: String): Map<String, IntArray> {
         val url = "https://miot-spec.org/miot-spec-v2/instance".toHttpUrl().newBuilder()

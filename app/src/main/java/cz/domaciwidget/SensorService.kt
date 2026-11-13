@@ -31,7 +31,7 @@ class SensorService(private val ctx: Context) {
         return block(cloud, fresh)
     }
 
-    fun listDevices(): List<Device> = withSession { c, s -> c.listDevices(s) }
+    fun listDevices(): List<Device> = withSession { c, s -> c.listDevicesWithRooms(s) }
 
     private fun defaultMap(): Map<String, IntArray> = mapOf(
         "t" to intArrayOf(2, 1),

@@ -106,7 +106,7 @@ class LoginActivity : Activity() {
                 val session = MiCloud(region, dev, agent).loginWithPassToken(uid, pass, dev)
                 Prefs.savePassLogin(this, region, uid, pass, dev)
                 Prefs.saveSession(this, session)
-                val devices = MiCloud(region).listDevices(session)
+                val devices = MiCloud(region).listDevicesWithRooms(session)
                 Prefs.saveDevices(this, devices)
                 runOnUiThread {
                     Toast.makeText(this, "Přihlášeno, nalezeno zařízení: ${devices.size}", Toast.LENGTH_LONG).show()

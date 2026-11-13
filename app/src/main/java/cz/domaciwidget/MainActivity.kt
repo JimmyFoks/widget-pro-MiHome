@@ -15,6 +15,7 @@ class MainActivity : Activity() {
     private lateinit var regionEt: EditText
     private lateinit var status: TextView
     private lateinit var diag: TextView
+    private lateinit var alarmDiag: TextView
 
     private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
 
@@ -75,6 +76,9 @@ class MainActivity : Activity() {
         diag = label("", 13f)
         root.addView(diag)
 
+        alarmDiag = label("", 12f)
+        root.addView(alarmDiag)
+
         root.addView(
             label(
                 "Tip: v nastavení telefonu (Aplikace → Domácí widget) povolte automatické " +
@@ -92,5 +96,6 @@ class MainActivity : Activity() {
             "Zatím nejste přihlášeni."
         }
         diag.text = "Poslední obnova dat: " + Prefs.status(this)
+        alarmDiag.text = "Diagnostika budíku:\n" + AlarmInfo.describe(this)
     }
 }

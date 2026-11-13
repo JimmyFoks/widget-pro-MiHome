@@ -100,6 +100,7 @@ object Prefs {
                     .put("name", d.name)
                     .put("model", d.model)
                     .put("spec", d.specType)
+                    .put("room", d.room)
             )
         }
         sp(ctx).edit().putString("devices", arr.toString()).apply()
@@ -111,7 +112,10 @@ object Prefs {
             val arr = JSONArray(s)
             (0 until arr.length()).map {
                 val o = arr.getJSONObject(it)
-                Device(o.optString("did"), o.optString("name"), o.optString("model"), o.optString("spec"))
+                Device(
+                    o.optString("did"), o.optString("name"), o.optString("model"),
+                    o.optString("spec"), o.optString("room")
+                )
             }
         } catch (e: Exception) {
             emptyList()
