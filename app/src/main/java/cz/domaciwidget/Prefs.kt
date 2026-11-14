@@ -3,6 +3,9 @@ package cz.domaciwidget
 import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 object Prefs {
     private fun sp(ctx: Context) = ctx.getSharedPreferences("domaci_widget", Context.MODE_PRIVATE)
@@ -145,6 +148,36 @@ object Prefs {
         } catch (e: Exception) {
             null
         }
+    }
+
+    // --- denní minimum a maximum (z měření widgetu od půlnoci) ---
+    private fun today(): String = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
+
+    fun updateDayRange(ctx: Context, did: String, temp: Double) {
+        val day = today()
+        var min = temp
+        var max = temp
+        val cur = sp(ctx).getString("mm_$did", null)
+        if (cur != null) {
+            val p = cur.split("|")
+            if (p.size == 3 && p[0] == day) {
+                val a = p[1].toDoubleOrNull()
+                val b = p[2].toDoubleOrNull()
+                if (a != null && a < min) min = a
+                if (b != null && b > max) max = b
+            }
+        }
+        sp(ctx).edit().putString("mm_$did", String.format(Locale.US, "%s|%.2f|%.2f", day, min, max)).apply()
+    }
+
+    /** (minimum, maximum) za dnešek, nebo null. */
+    fun dayRange(ctx: Context, did: String): Pair<Double, Double>? {
+        val cur = sp(ctx).getString("mm_$did", null) ?: return null
+        val p = cur.split("|")
+        if (p.size != 3 || p[0] != today()) return null
+        val a = p[1].toDoubleOrNull() ?: return null
+        val b = p[2].toDoubleOrNull() ?: return null
+        return Pair(a, b)
     }
 
     // --- mapa vlastností (siid/piid) ---

@@ -34,6 +34,8 @@ class RefreshWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
                 try {
                     val r = svc.fetchReading(did)
                     Prefs.saveReading(ctx, did, r)
+                    val t = r.temp
+                    if (t != null) Prefs.updateDayRange(ctx, did, t)
                 } catch (e: Exception) {
                     errors.add(e.message ?: e.javaClass.simpleName)
                 }

@@ -14,31 +14,13 @@
         android:id="@+id/left"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_weight="1.6">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="start"
             android:orientation="vertical">
-
-            <TextClock
-                android:id="@+id/clock"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:autoSizeMaxTextSize="90sp"
-                android:autoSizeMinTextSize="30sp"
-                android:autoSizeStepGranularity="1sp"
-                android:autoSizeTextType="uniform"
-                android:fontFamily="sans-serif-medium"
-                android:format12Hour="HH:mm"
-                android:format24Hour="HH:mm"
-                android:gravity="start|bottom"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:textColor="#FFFFFF"
-                android:textSize="60sp" />
 
             <TextClock
                 android:id="@+id/date"
@@ -51,11 +33,28 @@
                 android:textColor="#CCFFFFFF"
                 android:textSize="15sp" />
 
+            <TextClock
+                android:id="@+id/clock"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:autoSizeMaxTextSize="110sp"
+                android:autoSizeMinTextSize="30sp"
+                android:autoSizeStepGranularity="1sp"
+                android:autoSizeTextType="uniform"
+                android:fontFamily="sans-serif-medium"
+                android:format12Hour="HH:mm"
+                android:format24Hour="HH:mm"
+                android:gravity="start|center_vertical"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:textColor="#FFFFFF"
+                android:textSize="70sp" />
+
             <LinearLayout
                 android:id="@+id/alarm_row"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -87,27 +86,33 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
+        android:layout_marginStart="8dp"
         android:layout_weight="1"
         android:gravity="end"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/sensor_name"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:gravity="end"
             android:maxLines="1"
             android:text="Vyberte senzor"
             android:textColor="#CCFFFFFF"
             android:textSize="13sp" />
 
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
         <TextView
             android:id="@+id/temp"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:autoSizeMaxTextSize="46sp"
-            android:autoSizeMinTextSize="22sp"
+            android:layout_height="40dp"
+            android:autoSizeMaxTextSize="32sp"
+            android:autoSizeMinTextSize="18sp"
             android:autoSizeStepGranularity="1sp"
             android:autoSizeTextType="uniform"
             android:gravity="end|center_vertical"
@@ -115,7 +120,7 @@
             android:maxLines="1"
             android:text="-- °C"
             android:textColor="#FFFFFF"
-            android:textSize="34sp" />
+            android:textSize="32sp" />
 
         <TextView
             android:id="@+id/hum"
@@ -126,19 +131,31 @@
             android:textColor="#CCFFFFFF"
             android:textSize="14sp" />
 
+        <TextView
+            android:id="@+id/range"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text=""
+            android:textColor="#B3FFFFFF"
+            android:textSize="13sp" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
         <LinearLayout
             android:id="@+id/row2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="end|center_vertical"
-            android:orientation="horizontal">
+            android:gravity="end"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/sensor2_name"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:ellipsize="end"
                 android:gravity="end"
                 android:maxLines="1"
@@ -146,26 +163,32 @@
                 android:textColor="#B3FFFFFF"
                 android:textSize="12sp" />
 
-            <TextView
-                android:id="@+id/sensor2_temp"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:maxLines="1"
-                android:text=""
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/sensor2_hum"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:maxLines="1"
-                android:text=""
-                android:textColor="#CCFFFFFF"
-                android:textSize="13sp" />
+                <TextView
+                    android:id="@+id/sensor2_temp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:text=""
+                    android:textColor="#FFFFFF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/sensor2_hum"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:maxLines="1"
+                    android:text=""
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="13sp" />
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

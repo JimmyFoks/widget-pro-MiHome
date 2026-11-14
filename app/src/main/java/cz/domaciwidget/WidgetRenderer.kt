@@ -1,13 +1,10 @@
 package cz.domaciwidget
 
-import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.provider.AlarmClock
 import android.view.View
 import android.widget.RemoteViews
 import java.util.Date
@@ -34,33 +31,6 @@ object WidgetRenderer {
         return PendingIntent.getActivity(ctx, 1000 + id * 4 + slot, intent, flags)
     }
 
-    private fun launchFallback(pm: PackageManager): Intent? {
-        for (pkg in listOf("com.android.deskclock", "com.google.android.deskclock")) {
-            val li = pm.getLaunchIntentForPackage(pkg)
-            if (li != null) return li
-        }
-        return null
-    }
-
-    private fun clockPendingIntent(ctx: Context, flags: Int): PendingIntent? {
-        val pm = ctx.packageManager
-        val ri = pm.resolveActivity(Intent(AlarmClock.ACTION_SHOW_ALARMS), 0)
-        val intent: Intent? = if (ri != null && ri.activityInfo.packageName != "android") {
-            Intent(AlarmClock.ACTION_SHOW_ALARMS)
-                .setClassName(ri.activityInfo.packageName, ri.activityInfo.name)
-        } else if (ri != null) {
-            Intent(AlarmClock.ACTION_SHOW_ALARMS)
-        } else {
-            launchFallback(pm)
-        }
-        if (intent == null) {
-            val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            return am.nextAlarmClock?.showIntent
-        }
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        return PendingIntent.getActivity(ctx, 1, intent, flags)
-    }
-
     private fun build(ctx: Context, id: Int): RemoteViews {
         val v = RemoteViews(ctx.packageName, R.layout.widget)
         val timeFmt = android.text.format.DateFormat.getTimeFormat(ctx)
@@ -74,24 +44,34 @@ object WidgetRenderer {
             v.setTextViewText(R.id.sensor_name, "Klepněte a vyberte senzor")
             v.setTextViewText(R.id.temp, "-- °C")
             v.setViewVisibility(R.id.hum, View.GONE)
+            v.setViewVisibility(R.id.range, View.GONE)
         } else {
-            val name = Prefs.widgetName(ctx, id) ?: "Senzor"
+            v.setTextViewText(R.id.sensor_name, Prefs.widgetName(ctx, id) ?: "Senzor")
             val r = Prefs.reading(ctx, did)
             if (r == null) {
-                v.setTextViewText(R.id.sensor_name, name)
                 v.setTextViewText(R.id.temp, "-- °C")
                 v.setViewVisibility(R.id.hum, View.GONE)
+                v.setViewVisibility(R.id.range, View.GONE)
             } else {
-                val stale = System.currentTimeMillis() - r.ts > 90L * 60L * 1000L
-                val head = name + " · " + timeFmt.format(Date(r.ts)) + (if (stale) " !" else "")
-                v.setTextViewText(R.id.sensor_name, head)
                 v.setTextViewText(R.id.temp, fmtTemp(r.temp))
+
+                val stale = System.currentTimeMillis() - r.ts > 90L * 60L * 1000L
+                val parts = ArrayList<String>()
                 val hum = r.hum
-                if (hum != null) {
-                    v.setViewVisibility(R.id.hum, View.VISIBLE)
-                    v.setTextViewText(R.id.hum, "💧 " + Math.round(hum).toString() + " %")
+                if (hum != null) parts.add("💧 " + Math.round(hum).toString() + " %")
+                parts.add(timeFmt.format(Date(r.ts)) + (if (stale) " !" else ""))
+                v.setViewVisibility(R.id.hum, View.VISIBLE)
+                v.setTextViewText(R.id.hum, parts.joinToString("  ·  "))
+
+                val range = Prefs.dayRange(ctx, did)
+                if (range != null) {
+                    v.setViewVisibility(R.id.range, View.VISIBLE)
+                    v.setTextViewText(
+                        R.id.range,
+                        String.format(Locale.getDefault(), "↓ %.1f°  ↑ %.1f°", range.first, range.second)
+                    )
                 } else {
-                    v.setViewVisibility(R.id.hum, View.GONE)
+                    v.setViewVisibility(R.id.range, View.GONE)
                 }
             }
         }
@@ -130,17 +110,14 @@ object WidgetRenderer {
         v.setOnClickPendingIntent(R.id.root, refresh)
         v.setOnClickPendingIntent(R.id.temp, refresh)
         v.setOnClickPendingIntent(R.id.hum, refresh)
+        v.setOnClickPendingIntent(R.id.range, refresh)
 
-        val clock = clockPendingIntent(ctx, flags)
-        if (clock != null) {
-            v.setOnClickPendingIntent(R.id.click_left, clock)
-            v.setOnClickPendingIntent(R.id.left, clock)
-            v.setOnClickPendingIntent(R.id.clock, clock)
-            v.setOnClickPendingIntent(R.id.date, clock)
-            v.setOnClickPendingIntent(R.id.alarm_row, clock)
-        } else {
-            v.setOnClickPendingIntent(R.id.click_left, refresh)
-        }
+        val clock = PendingIntent.getActivity(ctx, 2, Intent(ctx, ClockActivity::class.java), flags)
+        v.setOnClickPendingIntent(R.id.click_left, clock)
+        v.setOnClickPendingIntent(R.id.left, clock)
+        v.setOnClickPendingIntent(R.id.clock, clock)
+        v.setOnClickPendingIntent(R.id.date, clock)
+        v.setOnClickPendingIntent(R.id.alarm_row, clock)
 
         v.setOnClickPendingIntent(R.id.sensor_name, configIntent(ctx, id, 1, flags))
         val cfg2 = configIntent(ctx, id, 2, flags)

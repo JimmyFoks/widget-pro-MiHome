@@ -27,6 +27,13 @@
         </activity>
 
         <activity
+            android:name=".ClockActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity
             android:name=".LoginActivity"
             android:exported="false" />
 
