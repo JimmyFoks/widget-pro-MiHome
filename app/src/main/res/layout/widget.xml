@@ -10,71 +10,79 @@
     android:paddingEnd="14dp"
     android:paddingBottom="8dp">
 
-    <LinearLayout
+    <FrameLayout
         android:id="@+id/left"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:gravity="start"
-        android:orientation="vertical">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <TextClock
-            android:id="@+id/clock"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-medium"
-            android:format12Hour="HH:mm"
-            android:format24Hour="HH:mm"
-            android:includeFontPadding="false"
-            android:textColor="#FFFFFF"
-            android:textSize="48sp" />
-
-        <TextClock
-            android:id="@+id/date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ellipsize="end"
-            android:format12Hour="EEEE d. MMMM"
-            android:format24Hour="EEEE d. MMMM"
-            android:maxLines="1"
-            android:textColor="#CCFFFFFF"
-            android:textSize="14sp" />
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+        android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/alarm_row"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="start"
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/alarm_icon"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:src="@drawable/ic_alarm" />
+            <TextClock
+                android:id="@+id/clock"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:autoSizeMaxTextSize="90sp"
+                android:autoSizeMinTextSize="30sp"
+                android:autoSizeStepGranularity="1sp"
+                android:autoSizeTextType="uniform"
+                android:fontFamily="sans-serif-medium"
+                android:format12Hour="HH:mm"
+                android:format24Hour="HH:mm"
+                android:gravity="start|bottom"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:textColor="#FFFFFF"
+                android:textSize="60sp" />
 
-            <TextView
-                android:id="@+id/alarm"
+            <TextClock
+                android:id="@+id/date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
+                android:ellipsize="end"
+                android:format12Hour="EEEE d. MMMM"
+                android:format24Hour="EEEE d. MMMM"
                 android:maxLines="1"
-                android:text="--"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textColor="#CCFFFFFF"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:id="@+id/alarm_row"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/alarm_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_alarm" />
+
+                <TextView
+                    android:id="@+id/alarm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:maxLines="1"
+                    android:text="--"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+
+        <ImageView
+            android:id="@+id/click_left"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="0dp"
@@ -82,11 +90,6 @@
         android:layout_weight="1"
         android:gravity="end"
         android:orientation="vertical">
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/sensor_name"
@@ -96,82 +99,38 @@
             android:maxLines="1"
             android:text="Vyberte senzor"
             android:textColor="#CCFFFFFF"
-            android:textSize="12sp" />
+            android:textSize="13sp" />
 
         <TextView
             android:id="@+id/temp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:autoSizeMaxTextSize="46sp"
+            android:autoSizeMinTextSize="22sp"
+            android:autoSizeStepGranularity="1sp"
+            android:autoSizeTextType="uniform"
+            android:gravity="end|center_vertical"
             android:includeFontPadding="false"
             android:maxLines="1"
             android:text="-- °C"
             android:textColor="#FFFFFF"
-            android:textSize="32sp" />
+            android:textSize="34sp" />
 
-        <LinearLayout
-            android:id="@+id/hum_row"
+        <TextView
+            android:id="@+id/hum"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="end|center_vertical"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:id="@+id/hum_group"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="13dp"
-                    android:layout_height="13dp"
-                    android:src="@drawable/ic_drop" />
-
-                <TextView
-                    android:id="@+id/hum"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:maxLines="1"
-                    android:text=""
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/bat_group"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="13dp"
-                    android:layout_height="13dp"
-                    android:src="@drawable/ic_battery" />
-
-                <TextView
-                    android:id="@+id/bat"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:maxLines="1"
-                    android:text=""
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="13sp" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:maxLines="1"
+            android:text=""
+            android:textColor="#CCFFFFFF"
+            android:textSize="14sp" />
 
         <LinearLayout
             android:id="@+id/row2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
             android:gravity="end|center_vertical"
             android:orientation="horizontal">
 
@@ -185,7 +144,7 @@
                 android:maxLines="1"
                 android:text=""
                 android:textColor="#B3FFFFFF"
-                android:textSize="11sp" />
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/sensor2_temp"
@@ -195,32 +154,18 @@
                 android:maxLines="1"
                 android:text=""
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
-                android:id="@+id/hum2_group"
+            <TextView
+                android:id="@+id/sensor2_hum"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="12dp"
-                    android:layout_height="12dp"
-                    android:src="@drawable/ic_drop" />
-
-                <TextView
-                    android:id="@+id/sensor2_hum"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:maxLines="1"
-                    android:text=""
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="12sp" />
-            </LinearLayout>
+                android:maxLines="1"
+                android:text=""
+                android:textColor="#CCFFFFFF"
+                android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

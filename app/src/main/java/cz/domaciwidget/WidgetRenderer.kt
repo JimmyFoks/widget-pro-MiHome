@@ -1,5 +1,6 @@
 package cz.domaciwidget
 
+import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -52,7 +53,10 @@ object WidgetRenderer {
         } else {
             launchFallback(pm)
         }
-        if (intent == null) return null
+        if (intent == null) {
+            val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            return am.nextAlarmClock?.showIntent
+        }
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         return PendingIntent.getActivity(ctx, 1, intent, flags)
     }
@@ -69,34 +73,25 @@ object WidgetRenderer {
         if (did == null) {
             v.setTextViewText(R.id.sensor_name, "Klepněte a vyberte senzor")
             v.setTextViewText(R.id.temp, "-- °C")
-            v.setViewVisibility(R.id.hum_group, View.GONE)
-            v.setViewVisibility(R.id.bat_group, View.GONE)
+            v.setViewVisibility(R.id.hum, View.GONE)
         } else {
             val name = Prefs.widgetName(ctx, id) ?: "Senzor"
             val r = Prefs.reading(ctx, did)
             if (r == null) {
                 v.setTextViewText(R.id.sensor_name, name)
                 v.setTextViewText(R.id.temp, "-- °C")
-                v.setViewVisibility(R.id.hum_group, View.GONE)
-                v.setViewVisibility(R.id.bat_group, View.GONE)
+                v.setViewVisibility(R.id.hum, View.GONE)
             } else {
                 val stale = System.currentTimeMillis() - r.ts > 90L * 60L * 1000L
                 val head = name + " · " + timeFmt.format(Date(r.ts)) + (if (stale) " !" else "")
                 v.setTextViewText(R.id.sensor_name, head)
                 v.setTextViewText(R.id.temp, fmtTemp(r.temp))
                 val hum = r.hum
-                val bat = r.bat
                 if (hum != null) {
-                    v.setViewVisibility(R.id.hum_group, View.VISIBLE)
-                    v.setTextViewText(R.id.hum, Math.round(hum).toString() + " %")
+                    v.setViewVisibility(R.id.hum, View.VISIBLE)
+                    v.setTextViewText(R.id.hum, "💧 " + Math.round(hum).toString() + " %")
                 } else {
-                    v.setViewVisibility(R.id.hum_group, View.GONE)
-                }
-                if (bat != null) {
-                    v.setViewVisibility(R.id.bat_group, View.VISIBLE)
-                    v.setTextViewText(R.id.bat, bat.toString() + " %")
-                } else {
-                    v.setViewVisibility(R.id.bat_group, View.GONE)
+                    v.setViewVisibility(R.id.hum, View.GONE)
                 }
             }
         }
@@ -111,15 +106,15 @@ object WidgetRenderer {
             val r2 = Prefs.reading(ctx, did2)
             if (r2 == null) {
                 v.setTextViewText(R.id.sensor2_temp, "-- °C")
-                v.setViewVisibility(R.id.hum2_group, View.GONE)
+                v.setViewVisibility(R.id.sensor2_hum, View.GONE)
             } else {
                 v.setTextViewText(R.id.sensor2_temp, fmtTemp(r2.temp))
                 val h2 = r2.hum
                 if (h2 != null) {
-                    v.setViewVisibility(R.id.hum2_group, View.VISIBLE)
-                    v.setTextViewText(R.id.sensor2_hum, Math.round(h2).toString() + " %")
+                    v.setViewVisibility(R.id.sensor2_hum, View.VISIBLE)
+                    v.setTextViewText(R.id.sensor2_hum, "💧 " + Math.round(h2).toString() + " %")
                 } else {
-                    v.setViewVisibility(R.id.hum2_group, View.GONE)
+                    v.setViewVisibility(R.id.sensor2_hum, View.GONE)
                 }
             }
         }
@@ -134,16 +129,17 @@ object WidgetRenderer {
         )
         v.setOnClickPendingIntent(R.id.root, refresh)
         v.setOnClickPendingIntent(R.id.temp, refresh)
-        v.setOnClickPendingIntent(R.id.hum_row, refresh)
+        v.setOnClickPendingIntent(R.id.hum, refresh)
 
         val clock = clockPendingIntent(ctx, flags)
         if (clock != null) {
+            v.setOnClickPendingIntent(R.id.click_left, clock)
             v.setOnClickPendingIntent(R.id.left, clock)
             v.setOnClickPendingIntent(R.id.clock, clock)
             v.setOnClickPendingIntent(R.id.date, clock)
             v.setOnClickPendingIntent(R.id.alarm_row, clock)
-            v.setOnClickPendingIntent(R.id.alarm_icon, clock)
-            v.setOnClickPendingIntent(R.id.alarm, clock)
+        } else {
+            v.setOnClickPendingIntent(R.id.click_left, refresh)
         }
 
         v.setOnClickPendingIntent(R.id.sensor_name, configIntent(ctx, id, 1, flags))
