@@ -83,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_above="@id/left_bottom"
                 android:layout_alignParentTop="true"
-                android:layout_marginTop="-12dp"
+                android:layout_marginTop="-10dp"
                 android:autoSizeMaxTextSize="120sp"
                 android:autoSizeMinTextSize="30sp"
                 android:autoSizeStepGranularity="1sp"
