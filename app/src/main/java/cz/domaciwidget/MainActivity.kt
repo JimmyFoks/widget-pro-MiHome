@@ -2,6 +2,9 @@ package cz.domaciwidget
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
+import android.os.PowerManager
+import android.provider.Settings
 import android.os.Bundle
 import android.text.InputType
 import android.widget.Button
@@ -73,6 +76,31 @@ class MainActivity : Activity() {
         }
         root.addView(refreshBtn)
 
+        val batteryBtn = Button(this)
+        batteryBtn.text = "Povolit běh na pozadí"
+        batteryBtn.setOnClickListener {
+            val pm = getSystemService(POWER_SERVICE) as PowerManager
+            try {
+                if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                    startActivity(
+                        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+                            .setData(Uri.parse("package:$packageName"))
+                    )
+                } else {
+                    startActivity(
+                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                            .setData(Uri.parse("package:$packageName"))
+                    )
+                }
+            } catch (e: Exception) {
+                startActivity(
+                    Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                        .setData(Uri.parse("package:$packageName"))
+                )
+            }
+        }
+        root.addView(batteryBtn)
+
         diag = label("", 13f)
         root.addView(diag)
 
@@ -95,7 +123,10 @@ class MainActivity : Activity() {
         } else {
             "Zatím nejste přihlášeni."
         }
-        diag.text = "Poslední obnova dat: " + Prefs.status(this)
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        val unrestricted = pm.isIgnoringBatteryOptimizations(packageName)
+        diag.text = "Poslední obnova dat: " + Prefs.status(this) +
+                "\nVýjimka z úspory baterie: " + (if (unrestricted) "ano" else "ne")
         alarmDiag.text = "Diagnostika budíku:\n" + AlarmInfo.describe(this)
     }
 }

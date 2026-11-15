@@ -32,6 +32,19 @@ class WidgetProvider : AppWidgetProvider() {
         if (action == ACTION_REFRESH) {
             RefreshWorker.enqueueNow(context)
             WidgetRenderer.renderAll(context)
+        } else if (action == ACTION_TICK) {
+            val pending = goAsync()
+            val app = context.applicationContext
+            RefreshScheduler.arm(app)
+            Thread {
+                try {
+                    RefreshWorker.doRefresh(app, "budík")
+                } catch (e: Exception) {
+                    Prefs.setStatus(app, "Chyba budíku: " + (e.message ?: e.javaClass.simpleName))
+                } finally {
+                    pending.finish()
+                }
+            }.start()
         } else if (action == AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED) {
             WidgetRenderer.renderAll(context)
         }
@@ -39,5 +52,6 @@ class WidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_REFRESH = "cz.domaciwidget.REFRESH"
+        const val ACTION_TICK = "cz.domaciwidget.TICK"
     }
 }

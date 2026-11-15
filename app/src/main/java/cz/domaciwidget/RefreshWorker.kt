@@ -18,34 +18,11 @@ import java.util.concurrent.TimeUnit
 class RefreshWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params) {
 
     override fun doWork(): Result {
-        val ctx = applicationContext
-        val mgr = AppWidgetManager.getInstance(ctx)
-        val ids = mgr.getAppWidgetIds(ComponentName(ctx, WidgetProvider::class.java))
-        if (ids.isEmpty()) return Result.success()
-
-        val dids = ids
-            .flatMap { listOfNotNull(Prefs.widgetDid(ctx, it), Prefs.widgetDid2(ctx, it)) }
-            .distinct()
-        if (dids.isNotEmpty() && Prefs.hasCredentials(ctx)) {
-            val svc = SensorService(ctx)
-            val errors = ArrayList<String>()
-            val now = SimpleDateFormat("d.M. HH:mm", Locale.getDefault()).format(Date())
-            for (did in dids) {
-                try {
-                    val r = svc.fetchReading(did)
-                    Prefs.saveReading(ctx, did, r)
-                    val t = r.temp
-                    if (t != null) Prefs.updateDayRange(ctx, did, t)
-                } catch (e: Exception) {
-                    errors.add(e.message ?: e.javaClass.simpleName)
-                }
-            }
-            Prefs.setStatus(
-                ctx,
-                if (errors.isEmpty()) "OK ($now)" else "Chyba ($now): " + errors.joinToString("; ")
-            )
+        try {
+            doRefresh(applicationContext, "WorkManager")
+        } catch (e: Exception) {
+            Prefs.setStatus(applicationContext, "Chyba WorkManageru: " + (e.message ?: e.javaClass.simpleName))
         }
-        WidgetRenderer.renderAll(ctx)
         return Result.success()
     }
 
@@ -53,10 +30,44 @@ class RefreshWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
         private const val PERIODIC = "periodic_refresh"
         private const val NOW = "refresh_now"
 
+        /** Stáhne hodnoty senzorů a překreslí všechny widgety. [source] jen pro diagnostiku. */
+        @Synchronized
+        fun doRefresh(ctx: Context, source: String) {
+            val mgr = AppWidgetManager.getInstance(ctx)
+            val ids = mgr.getAppWidgetIds(ComponentName(ctx, WidgetProvider::class.java))
+            if (ids.isEmpty()) return
+
+            val dids = ids
+                .flatMap { listOfNotNull(Prefs.widgetDid(ctx, it), Prefs.widgetDid2(ctx, it)) }
+                .distinct()
+            if (dids.isNotEmpty() && Prefs.hasCredentials(ctx)) {
+                val svc = SensorService(ctx)
+                val errors = ArrayList<String>()
+                val now = SimpleDateFormat("d.M. HH:mm", Locale.getDefault()).format(Date())
+                for (did in dids) {
+                    try {
+                        val r = svc.fetchReading(did)
+                        Prefs.saveReading(ctx, did, r)
+                        val t = r.temp
+                        if (t != null) Prefs.updateDayRange(ctx, did, t)
+                    } catch (e: Exception) {
+                        errors.add(e.message ?: e.javaClass.simpleName)
+                    }
+                }
+                Prefs.setStatus(
+                    ctx,
+                    if (errors.isEmpty()) "OK ($now, $source)"
+                    else "Chyba ($now, $source): " + errors.joinToString("; ")
+                )
+            }
+            WidgetRenderer.renderAll(ctx)
+        }
+
         fun schedule(ctx: Context) {
             val req = PeriodicWorkRequest.Builder(RefreshWorker::class.java, 15, TimeUnit.MINUTES).build()
             WorkManager.getInstance(ctx)
                 .enqueueUniquePeriodicWork(PERIODIC, ExistingPeriodicWorkPolicy.KEEP, req)
+            RefreshScheduler.arm(ctx)
         }
 
         fun enqueueNow(ctx: Context) {
@@ -66,6 +77,7 @@ class RefreshWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, params
 
         fun cancel(ctx: Context) {
             WorkManager.getInstance(ctx).cancelUniqueWork(PERIODIC)
+            RefreshScheduler.disarm(ctx)
         }
     }
 }
