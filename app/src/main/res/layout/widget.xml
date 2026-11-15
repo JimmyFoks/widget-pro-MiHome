@@ -23,18 +23,6 @@
             android:orientation="vertical">
 
             <TextClock
-                android:id="@+id/date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:ellipsize="end"
-                android:format12Hour="EEEE d. MMMM"
-                android:format24Hour="EEEE d. MMMM"
-                android:maxLines="1"
-                android:textColor="#CCFFFFFF"
-                android:textSize="15sp" />
-
-            <TextClock
                 android:id="@+id/clock"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -46,16 +34,39 @@
                 android:fontFamily="sans-serif-medium"
                 android:format12Hour="HH:mm"
                 android:format24Hour="HH:mm"
-                android:gravity="start|center_vertical"
+                android:gravity="start|top"
                 android:includeFontPadding="false"
                 android:maxLines="1"
                 android:textColor="#FFFFFF"
                 android:textSize="70sp" />
 
+            <TextClock
+                android:id="@+id/date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:format12Hour="d. MMMM"
+                android:format24Hour="d. MMMM"
+                android:maxLines="1"
+                android:textColor="#E6FFFFFF"
+                android:textSize="17sp" />
+
+            <TextClock
+                android:id="@+id/weekday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:format12Hour="EEEE"
+                android:format24Hour="EEEE"
+                android:maxLines="1"
+                android:textColor="#CCFFFFFF"
+                android:textSize="17sp" />
+
             <LinearLayout
                 android:id="@+id/alarm_row"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
@@ -140,7 +151,7 @@
             android:maxLines="1"
             android:text=""
             android:textColor="#B3FFFFFF"
-            android:textSize="13sp" />
+            android:textSize="12sp" />
 
         <FrameLayout
             android:layout_width="match_parent"

@@ -68,7 +68,7 @@ object WidgetRenderer {
                     v.setViewVisibility(R.id.range, View.VISIBLE)
                     v.setTextViewText(
                         R.id.range,
-                        String.format(Locale.getDefault(), "↓ %.1f°  ↑ %.1f°", range.first, range.second)
+                        String.format(Locale.getDefault(), "↓%.1f°C  ↑%.1f°C", range.first, range.second)
                     )
                 } else {
                     v.setViewVisibility(R.id.range, View.GONE)

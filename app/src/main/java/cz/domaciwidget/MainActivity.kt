@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.widget.Button
@@ -30,6 +31,17 @@ class MainActivity : Activity() {
         return tv
     }
 
+    @Suppress("DEPRECATION")
+    private fun versionText(): String {
+        return try {
+            val pi = packageManager.getPackageInfo(packageName, 0)
+            val code: Long = if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else pi.versionCode.toLong()
+            (pi.versionName ?: "?") + " (" + code + ")"
+        } catch (e: Exception) {
+            "?"
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -41,6 +53,7 @@ class MainActivity : Activity() {
         setContentView(scroll)
 
         root.addView(label("Domácí widget – teploměry z Xiaomi / MiHome", 18f))
+        root.addView(label("Verze " + versionText(), 12f))
         root.addView(
             label(
                 "1) Klepněte na Přihlásit a přihlaste se Xiaomi účtem v otevřeném okně " +
