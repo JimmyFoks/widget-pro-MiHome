@@ -43,25 +43,29 @@ object WidgetRenderer {
         if (did == null) {
             v.setTextViewText(R.id.sensor_name, "Klepněte a vyberte senzor")
             v.setTextViewText(R.id.temp, "-- °C")
-            v.setViewVisibility(R.id.hum, View.GONE)
+            v.setViewVisibility(R.id.hum_row, View.GONE)
             v.setViewVisibility(R.id.range, View.GONE)
         } else {
             v.setTextViewText(R.id.sensor_name, Prefs.widgetName(ctx, id) ?: "Senzor")
             val r = Prefs.reading(ctx, did)
             if (r == null) {
                 v.setTextViewText(R.id.temp, "-- °C")
-                v.setViewVisibility(R.id.hum, View.GONE)
+                v.setViewVisibility(R.id.hum_row, View.GONE)
                 v.setViewVisibility(R.id.range, View.GONE)
             } else {
                 v.setTextViewText(R.id.temp, fmtTemp(r.temp))
 
                 val stale = System.currentTimeMillis() - r.ts > 90L * 60L * 1000L
-                val parts = ArrayList<String>()
+                val timeText = timeFmt.format(Date(r.ts)) + (if (stale) " !" else "")
                 val hum = r.hum
-                if (hum != null) parts.add("💧 " + Math.round(hum).toString() + " %")
-                parts.add(timeFmt.format(Date(r.ts)) + (if (stale) " !" else ""))
-                v.setViewVisibility(R.id.hum, View.VISIBLE)
-                v.setTextViewText(R.id.hum, parts.joinToString("  ·  "))
+                v.setViewVisibility(R.id.hum_row, View.VISIBLE)
+                if (hum != null) {
+                    v.setViewVisibility(R.id.hum_icon, View.VISIBLE)
+                    v.setTextViewText(R.id.hum, Math.round(hum).toString() + " %  ·  " + timeText)
+                } else {
+                    v.setViewVisibility(R.id.hum_icon, View.GONE)
+                    v.setTextViewText(R.id.hum, timeText)
+                }
 
                 val range = Prefs.dayRange(ctx, did)
                 if (range != null) {
@@ -86,15 +90,15 @@ object WidgetRenderer {
             val r2 = Prefs.reading(ctx, did2)
             if (r2 == null) {
                 v.setTextViewText(R.id.sensor2_temp, "-- °C")
-                v.setViewVisibility(R.id.sensor2_hum, View.GONE)
+                v.setViewVisibility(R.id.hum2_group, View.GONE)
             } else {
                 v.setTextViewText(R.id.sensor2_temp, fmtTemp(r2.temp))
                 val h2 = r2.hum
                 if (h2 != null) {
-                    v.setViewVisibility(R.id.sensor2_hum, View.VISIBLE)
-                    v.setTextViewText(R.id.sensor2_hum, "💧 " + Math.round(h2).toString() + " %")
+                    v.setViewVisibility(R.id.hum2_group, View.VISIBLE)
+                    v.setTextViewText(R.id.sensor2_hum, Math.round(h2).toString() + " %")
                 } else {
-                    v.setViewVisibility(R.id.sensor2_hum, View.GONE)
+                    v.setViewVisibility(R.id.hum2_group, View.GONE)
                 }
             }
         }
@@ -109,6 +113,7 @@ object WidgetRenderer {
         )
         v.setOnClickPendingIntent(R.id.root, refresh)
         v.setOnClickPendingIntent(R.id.temp, refresh)
+        v.setOnClickPendingIntent(R.id.hum_row, refresh)
         v.setOnClickPendingIntent(R.id.hum, refresh)
         v.setOnClickPendingIntent(R.id.range, refresh)
 

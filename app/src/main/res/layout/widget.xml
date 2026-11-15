@@ -26,8 +26,9 @@
                 android:id="@+id/clock"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:layout_marginTop="-12dp"
                 android:layout_weight="1"
-                android:autoSizeMaxTextSize="110sp"
+                android:autoSizeMaxTextSize="120sp"
                 android:autoSizeMinTextSize="30sp"
                 android:autoSizeStepGranularity="1sp"
                 android:autoSizeTextType="uniform"
@@ -107,7 +108,7 @@
             android:id="@+id/sensor_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="10dp"
             android:ellipsize="end"
             android:gravity="end"
             android:maxLines="1"
@@ -135,14 +136,29 @@
             android:textColor="#FFFFFF"
             android:textSize="32sp" />
 
-        <TextView
-            android:id="@+id/hum"
+        <LinearLayout
+            android:id="@+id/hum_row"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:text=""
-            android:textColor="#CCFFFFFF"
-            android:textSize="14sp" />
+            android:gravity="end|center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/hum_icon"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:src="@drawable/ic_drop" />
+
+            <TextView
+                android:id="@+id/hum"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:maxLines="1"
+                android:text=""
+                android:textColor="#CCFFFFFF"
+                android:textSize="14sp" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/range"
@@ -156,7 +172,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_weight="3" />
 
         <LinearLayout
             android:id="@+id/row2"
@@ -189,18 +205,33 @@
                     android:maxLines="1"
                     android:text=""
                     android:textColor="#FFFFFF"
-                    android:textSize="15sp"
+                    android:textSize="16sp"
                     android:textStyle="bold" />
 
-                <TextView
-                    android:id="@+id/sensor2_hum"
+                <LinearLayout
+                    android:id="@+id/hum2_group"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:maxLines="1"
-                    android:text=""
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="13sp" />
+                    android:baselineAlignedChildIndex="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_drop" />
+
+                    <TextView
+                        android:id="@+id/sensor2_hum"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="3dp"
+                        android:maxLines="1"
+                        android:text=""
+                        android:textColor="#CCFFFFFF"
+                        android:textSize="14sp" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
